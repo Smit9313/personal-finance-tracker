@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -8,8 +8,12 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 import Link from 'next/link'
 import { signin } from '@/api/apiHandler'
+import { loginRedirectCall } from '@/util'
+import { useRouter } from 'next/navigation'
+import { Iuser } from '@/types/user'
 
 const Login = () => {
+  const router = useRouter();
 
   const validationSchema = Yup.object().shape({
     email: Yup.string().email("Email is invalid").required("Email is required"),
@@ -21,10 +25,20 @@ const Login = () => {
   const { register, handleSubmit, formState } = useForm(formOptions);
   const { errors } = formState;
 
-  const onSubmit = (data: { email: string, password: string }) => {
-    signin(data).then(res => console.log(res))
-  };
+  useEffect(()=>{
+    if(localStorage.getItem('atoken')){
+      router.push('/')
+    }
+  },[router])
 
+  const onSubmit = (data: Iuser) => {
+    signin(data).then(res => {
+    if(res.status === 201){
+        localStorage.setItem('atoken',res.data.accessToken);
+        loginRedirectCall();
+      }
+    })
+  };
 
   return (
     <section className="bg-gray-50 dark:bg-gray-900">

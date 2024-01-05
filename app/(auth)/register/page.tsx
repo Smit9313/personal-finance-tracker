@@ -8,8 +8,11 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 import Link from 'next/link'
 import { signup } from '@/api/apiHandler'
+import { useRouter } from 'next/navigation'
+import { Iuser } from '@/types/user'
 
 const Register = () => {
+  const router = useRouter();
   const validationSchema = Yup.object().shape({
     email: Yup.string().email("Email is invalid").required("Email is required"),
     password: Yup.string()
@@ -17,15 +20,19 @@ const Register = () => {
       .min(5, "Password must be at least 5 characters"),
     confirmPassword: Yup.string()
       .required("Confirm Password is required")
-      .oneOf([Yup.ref('password'), null], 'Passwords must match'), // Add validation for matching password
+      .oneOf([Yup.ref('password'), ""], 'Passwords must match'), // Add validation for matching password
   });
 
   const formOptions = { resolver: yupResolver(validationSchema) };
   const { register, handleSubmit, formState } = useForm(formOptions);
   const { errors } = formState;
 
-  const onSubmit = (data: { email: string, password: string }) => {
-    signup(data).then(res => console.log(res))
+  const onSubmit = (data: Iuser) => {
+    signup({ email: data.email, password: data.password }).then(res => {
+      if (res.status === 201) {
+        router.push('/login')
+      }
+    })
   };
 
   return (
